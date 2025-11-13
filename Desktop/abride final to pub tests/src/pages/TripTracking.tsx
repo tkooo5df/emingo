@@ -56,11 +56,6 @@ const TripTracking = () => {
               lng: location.longitude,
             });
           }
-          
-          toast({
-            title: "تم الحصول على الموقع",
-            description: "تم الحصول على موقعك بنجاح",
-          });
         }
       } catch (error) {
         toast({

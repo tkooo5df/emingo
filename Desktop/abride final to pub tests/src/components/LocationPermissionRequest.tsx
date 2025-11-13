@@ -124,11 +124,6 @@ export const LocationPermissionRequest = ({ children }: LocationPermissionReques
                 'passenger'
               );
             }
-
-            toast({
-              title: "✅ تم تفعيل الموقع",
-              description: "شكراً لسماحك بالوصول إلى موقعك",
-            });
           } catch (error) {
           }
         },
