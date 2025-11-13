@@ -91,7 +91,7 @@ const DeveloperSection = () => {
                     >
                       <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl"></div>
                       <img 
-                        src="https://scontent-dfw5-2.xx.fbcdn.net/v/t39.30808-1/557836426_31565187946463191_3926739828455517422_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=106&ccb=1-7&_nc_sid=e99d92&_nc_ohc=WU_FxVwEH_MQ7kNvwH0amDI&_nc_oc=Adly6m7PrfwwR2waby3cIAN0hXJNt7-KJ0MJ3m8XLXDjKYeWKwH9qWfhSMjW5JduVzOqUxKUwNItOjBRF9Kqnv56&_nc_zt=24&_nc_ht=scontent-dfw5-2.xx&_nc_gid=eiibMESIlmGT2E0_ogwJ0A&oh=00_AffULAFZ3TlBwn9ahdYgo_z8DRjMUUzdLtCg5vODQxfhhA&oe=69018B0A"
+                        src="https://media.licdn.com/dms/image/v2/D4D03AQHIm9xkh5Fwkg/profile-displayphoto-shrink_200_200/B4DZW0sh83HkAk-/0/1742493327983?e=2147483647&v=beta&t=99Ik7cMFpQWrT4ubyDR3sbELsbZiJvj9jJH3gK4SHMg"
                         alt="أمين كركار"
                         className="relative w-48 h-48 rounded-full object-cover border-4 border-primary/30 shadow-2xl"
                       />
