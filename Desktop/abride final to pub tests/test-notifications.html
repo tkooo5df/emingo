@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار نظام الإشعارات</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .notification {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 اختبار نظام الإشعارات</h1>
+        
+        <div class="test-section">
+            <h3>1. اختبار إنشاء إشعار</h3>
+            <button onclick="testCreateNotification()">إنشاء إشعار تجريبي</button>
+            <div id="createResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. اختبار إشعارات الحجز</h3>
+            <button onclick="testBookingNotification()">إشعار حجز جديد</button>
+            <button onclick="testBookingConfirmed()">إشعار تأكيد الحجز</button>
+            <button onclick="testBookingCancelled()">إشعار إلغاء الحجز</button>
+            <div id="bookingResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. اختبار جلب الإشعارات</h3>
+            <button onclick="testGetNotifications()">جلب الإشعارات</button>
+            <button onclick="testGetStats()">جلب الإحصائيات</button>
+            <div id="getResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. سجل العمليات</h3>
+            <button onclick="clearLog()">مسح السجل</button>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        let logElement = document.getElementById('log');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleString('ar-SA');
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            logElement.textContent = '';
+        }
+
+        function showResult(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${isError ? 'error' : 'success'}">${message}</div>`;
+        }
+
+        async function testCreateNotification() {
+            try {
+                log('بدء اختبار إنشاء إشعار...');
+                
+                const response = await fetch('/api/test-notification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: 'test-user-1',
+                        title: 'إشعار تجريبي',
+                        message: 'هذا إشعار تجريبي لاختبار النظام',
+                        type: 'info',
+                        category: 'system',
+                        priority: 'medium'
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    log('✅ تم إنشاء الإشعار بنجاح: ' + result.id);
+                    showResult('createResult', 'تم إنشاء الإشعار بنجاح!');
+                } else {
+                    throw new Error('فشل في إنشاء الإشعار');
+                }
+            } catch (error) {
+                log('❌ خطأ في إنشاء الإشعار: ' + error.message);
+                showResult('createResult', 'خطأ في إنشاء الإشعار: ' + error.message, true);
+            }
+        }
+
+        async function testBookingNotification() {
+            try {
+                log('بدء اختبار إشعار الحجز...');
+                
+                const response = await fetch('/api/test-booking-notification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bookingId: 'test-booking-1',
+                        passengerId: 'test-passenger-1',
+                        driverId: 'test-driver-1',
+                        tripId: 'test-trip-1',
+                        pickupLocation: 'الجزائر العاصمة',
+                        destinationLocation: 'وهران',
+                        seatsBooked: 2,
+                        totalAmount: 1500,
+                        paymentMethod: 'cod'
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    log('✅ تم إرسال إشعارات الحجز بنجاح: ' + result.length + ' إشعار');
+                    showResult('bookingResult', 'تم إرسال إشعارات الحجز بنجاح!');
+                } else {
+                    throw new Error('فشل في إرسال إشعارات الحجز');
+                }
+            } catch (error) {
+                log('❌ خطأ في إشعار الحجز: ' + error.message);
+                showResult('bookingResult', 'خطأ في إشعار الحجز: ' + error.message, true);
+            }
+        }
+
+        async function testBookingConfirmed() {
+            try {
+                log('بدء اختبار إشعار تأكيد الحجز...');
+                
+                const response = await fetch('/api/test-booking-confirmed', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bookingId: 'test-booking-1',
+                        driverId: 'test-driver-1'
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    log('✅ تم إرسال إشعار تأكيد الحجز بنجاح');
+                    showResult('bookingResult', 'تم إرسال إشعار تأكيد الحجز بنجاح!');
+                } else {
+                    throw new Error('فشل في إرسال إشعار تأكيد الحجز');
+                }
+            } catch (error) {
+                log('❌ خطأ في إشعار تأكيد الحجز: ' + error.message);
+                showResult('bookingResult', 'خطأ في إشعار تأكيد الحجز: ' + error.message, true);
+            }
+        }
+
+        async function testBookingCancelled() {
+            try {
+                log('بدء اختبار إشعار إلغاء الحجز...');
+                
+                const response = await fetch('/api/test-booking-cancelled', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bookingId: 'test-booking-1',
+                        actorId: 'test-passenger-1',
+                        reason: 'تغيير في الخطط'
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    log('✅ تم إرسال إشعار إلغاء الحجز بنجاح');
+                    showResult('bookingResult', 'تم إرسال إشعار إلغاء الحجز بنجاح!');
+                } else {
+                    throw new Error('فشل في إرسال إشعار إلغاء الحجز');
+                }
+            } catch (error) {
+                log('❌ خطأ في إشعار إلغاء الحجز: ' + error.message);
+                showResult('bookingResult', 'خطأ في إشعار إلغاء الحجز: ' + error.message, true);
+            }
+        }
+
+        async function testGetNotifications() {
+            try {
+                log('بدء اختبار جلب الإشعارات...');
+                
+                const response = await fetch('/api/test-get-notifications?userId=test-user-1');
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    log('✅ تم جلب الإشعارات بنجاح: ' + result.length + ' إشعار');
+                    showResult('getResult', `تم جلب ${result.length} إشعار بنجاح!`);
+                } else {
+                    throw new Error('فشل في جلب الإشعارات');
+                }
+            } catch (error) {
+                log('❌ خطأ في جلب الإشعارات: ' + error.message);
+                showResult('getResult', 'خطأ في جلب الإشعارات: ' + error.message, true);
+            }
+        }
+
+        async function testGetStats() {
+            try {
+                log('بدء اختبار جلب الإحصائيات...');
+                
+                const response = await fetch('/api/test-get-stats?userId=test-user-1');
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    log('✅ تم جلب الإحصائيات بنجاح: ' + JSON.stringify(result));
+                    showResult('getResult', `الإحصائيات: ${result.total} إجمالي، ${result.unread} غير مقروء`);
+                } else {
+                    throw new Error('فشل في جلب الإحصائيات');
+                }
+            } catch (error) {
+                log('❌ خطأ في جلب الإحصائيات: ' + error.message);
+                showResult('getResult', 'خطأ في جلب الإحصائيات: ' + error.message, true);
+            }
+        }
+
+        // بدء الاختبارات التلقائية
+        window.onload = function() {
+            log('🚀 تم تحميل صفحة اختبار الإشعارات');
+            log('يمكنك الآن اختبار النظام باستخدام الأزرار أعلاه');
+        };
+    </script>
+</body>
+</html>

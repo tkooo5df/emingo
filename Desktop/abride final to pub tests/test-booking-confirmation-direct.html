@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>اختبار تأكيد الحجز مباشرة</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      display: none;
+    }
+    .success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 2px solid #10b981;
+      display: block;
+    }
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 2px solid #ef4444;
+      display: block;
+    }
+    .log {
+      margin-top: 20px;
+      padding: 15px;
+      background: #1f2937;
+      color: #10b981;
+      border-radius: 6px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 اختبار تأكيد الحجز مباشرة</h1>
+    <p>هذه الصفحة تستدعي notifyBookingConfirmed مباشرة عبر Edge Function</p>
+    
+    <div>
+      <label>Booking ID (اختياري - اتركه فارغاً لعرض قائمة الحجوزات):</label>
+      <input type="text" id="bookingId" placeholder="188" value="">
+    </div>
+    
+    <div>
+      <label>Driver ID (اختياري):</label>
+      <input type="text" id="driverId" placeholder="b7ed3c49-7645-4d27-87ed-d03d1f7660d5" value="b7ed3c49-7645-4d27-87ed-d03d1f7660d5">
+    </div>
+    
+    <button onclick="testNotification()">اختبار notifyBookingConfirmed</button>
+    <button onclick="listBookings()" style="background: #10b981; margin-top: 10px;">عرض قائمة الحجوزات</button>
+    
+    <div id="result" class="result"></div>
+    <div id="log" class="log"></div>
+  </div>
+
+  <script type="module">
+    const supabaseUrl = 'https://kobsavfggcnfemdzsnpj.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtvYnNhdmZnZ2NuZmVtZHpzbnBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3OTk3ODEsImV4cCI6MjA3NDM3NTc4MX0._TfXDauroKe8EAv_Fv4PQAZfOqk-rHbXAlF8bOU3-Qk';
+
+    function addLog(message) {
+      const logDiv = document.getElementById('log');
+      const timestamp = new Date().toLocaleTimeString('ar-SA');
+      logDiv.textContent += `[${timestamp}] ${message}\n`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    window.listBookings = async function() {
+      const logDiv = document.getElementById('log');
+      logDiv.textContent = '';
+      
+      addLog('📋 جلب قائمة الحجوزات...');
+      
+      try {
+        const response = await fetch(`${supabaseUrl}/rest/v1/bookings?select=id,passenger_id,driver_id,status,created_at&order=created_at.desc&limit=20`, {
+          headers: {
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch bookings: ${response.status}`);
+        }
+        
+        const bookings = await response.json();
+        addLog(`✅ تم العثور على ${bookings.length} حجز:`);
+        addLog('');
+        
+        bookings.forEach((b, index) => {
+          addLog(`${index + 1}. Booking ID: ${b.id} | Status: ${b.status} | Passenger: ${b.passenger_id?.substring(0, 8)}... | Driver: ${b.driver_id?.substring(0, 8)}...`);
+        });
+        
+        addLog('');
+        addLog('💡 انسخ Booking ID من القائمة أعلاه واستخدمه في الاختبار');
+        
+      } catch (error) {
+        addLog(`❌ خطأ: ${error.message}`);
+      }
+    };
+
+    window.testNotification = async function() {
+      const bookingId = document.getElementById('bookingId').value.trim();
+      const driverId = document.getElementById('driverId').value.trim();
+      const resultDiv = document.getElementById('result');
+      const logDiv = document.getElementById('log');
+      
+      logDiv.textContent = '';
+      resultDiv.className = 'result';
+      resultDiv.style.display = 'none';
+      
+      addLog('🚀 بدء الاختبار...');
+      
+      // If no booking ID, list bookings first
+      if (!bookingId) {
+        addLog('⚠️ لم يتم إدخال Booking ID - جلب قائمة الحجوزات...');
+        await window.listBookings();
+        return;
+      }
+      
+      addLog(`Booking ID: ${bookingId}`);
+      addLog(`Driver ID: ${driverId || 'سيتم استخدام driver_id من الحجز'}`);
+      
+      try {
+        // Step 1: Get booking details - Try multiple methods
+        addLog('📋 Step 1: جلب تفاصيل الحجز...');
+        addLog(`   Trying booking ID: ${bookingId} (as number and string)`);
+        
+        let booking = null;
+        let bookingResponse = null;
+        
+        // Method 1: Try as number
+        addLog('   Method 1: جرب كرقم...');
+        try {
+          bookingResponse = await fetch(`${supabaseUrl}/rest/v1/bookings?id=eq.${parseInt(bookingId)}&select=*`, {
+            headers: {
+              'apikey': supabaseAnonKey,
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (bookingResponse.ok) {
+            const bookings = await bookingResponse.json();
+            if (bookings && bookings.length > 0) {
+              booking = bookings[0];
+              addLog(`   ✅ Found as number: ${booking.id}`);
+            }
+          }
+        } catch (e) {
+          addLog(`   ❌ Failed as number: ${e.message}`);
+        }
+        
+        // Method 2: Try as string if not found
+        if (!booking) {
+          addLog('   Method 2: جرب كسلسلة نصية...');
+          try {
+            bookingResponse = await fetch(`${supabaseUrl}/rest/v1/bookings?id=eq.${bookingId}&select=*`, {
+              headers: {
+                'apikey': supabaseAnonKey,
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (bookingResponse.ok) {
+              const bookings = await bookingResponse.json();
+              if (bookings && bookings.length > 0) {
+                booking = bookings[0];
+                addLog(`   ✅ Found as string: ${booking.id}`);
+              }
+            }
+          } catch (e) {
+            addLog(`   ❌ Failed as string: ${e.message}`);
+          }
+        }
+        
+        // Method 3: List all bookings and find by ID
+        if (!booking) {
+          addLog('   Method 3: جلب جميع الحجوزات والبحث...');
+          try {
+            bookingResponse = await fetch(`${supabaseUrl}/rest/v1/bookings?select=*&order=created_at.desc&limit=50`, {
+              headers: {
+                'apikey': supabaseAnonKey,
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (bookingResponse.ok) {
+              const allBookings = await bookingResponse.json();
+              addLog(`   📊 Total bookings found: ${allBookings?.length || 0}`);
+              
+              // Try to find by ID (as number or string)
+              booking = allBookings.find(b => 
+                b.id == bookingId || 
+                b.id === parseInt(bookingId) || 
+                b.id === bookingId.toString()
+              );
+              
+              if (booking) {
+                addLog(`   ✅ Found in list: ${booking.id}`);
+              } else {
+                addLog(`   ⚠️ Booking ${bookingId} not found in list`);
+                addLog(`   📋 Available booking IDs: ${allBookings.slice(0, 10).map(b => b.id).join(', ')}...`);
+              }
+            }
+          } catch (e) {
+            addLog(`   ❌ Failed to list bookings: ${e.message}`);
+          }
+        }
+        
+        if (!booking) {
+          throw new Error(`Booking ${bookingId} not found. Try using a different booking ID from the list above.`);
+        }
+        
+        addLog(`✅ الحجز موجود: ${booking.id}`);
+        addLog(`   Passenger ID: ${booking.passenger_id || 'N/A'}`);
+        addLog(`   Driver ID: ${booking.driver_id || 'N/A'}`);
+        addLog(`   Status: ${booking.status || 'N/A'}`);
+        
+        if (!booking.passenger_id) {
+          throw new Error('Booking has no passenger_id');
+        }
+        
+        // Step 2: Get passenger email
+        addLog('📋 Step 2: جلب بريد الراكب...');
+        addLog(`   Passenger ID: ${booking.passenger_id}`);
+        
+        const passengerResponse = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${booking.passenger_id}&select=id,email,full_name,first_name,last_name`, {
+          headers: {
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        addLog(`   Passenger response status: ${passengerResponse.status}`);
+        
+        if (!passengerResponse.ok) {
+          const errorText = await passengerResponse.text();
+          throw new Error(`Failed to fetch passenger: ${passengerResponse.status} - ${errorText}`);
+        }
+        
+        const passengers = await passengerResponse.json();
+        addLog(`   Passengers found: ${passengers?.length || 0}`);
+        
+        if (!passengers || passengers.length === 0) {
+          throw new Error(`Passenger not found for ID: ${booking.passenger_id}`);
+        }
+        
+        const passenger = passengers[0];
+        const passengerName = passenger.full_name || passenger.first_name || passenger.email || 'Unknown';
+        addLog(`✅ الراكب موجود: ${passengerName}`);
+        addLog(`   Email: ${passenger.email || 'NO EMAIL'}`);
+        addLog(`   ID: ${passenger.id}`);
+        
+        if (!passenger.email) {
+          throw new Error(`Passenger has no email address. Passenger ID: ${passenger.id}, Name: ${passengerName}`);
+        }
+        
+        // Step 3: Get driver info (optional, for email content)
+        let driverName = 'السائق';
+        if (booking.driver_id) {
+          addLog('📋 Step 2.5: جلب معلومات السائق...');
+          try {
+            const driverResponse = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${booking.driver_id}&select=full_name,first_name,phone`, {
+              headers: {
+                'apikey': supabaseAnonKey,
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (driverResponse.ok) {
+              const drivers = await driverResponse.json();
+              if (drivers && drivers.length > 0) {
+                const driver = drivers[0];
+                driverName = driver.full_name || driver.first_name || 'السائق';
+                addLog(`✅ السائق: ${driverName}`);
+              }
+            }
+          } catch (e) {
+            addLog(`⚠️ Could not fetch driver info: ${e.message}`);
+          }
+        }
+        
+        // Step 4: Send email directly via Edge Function
+        addLog('📋 Step 3: إرسال البريد مباشرة...');
+        addLog(`   To: ${passenger.email}`);
+        addLog(`   Subject: 🚗 تم قبول حجزك!`);
+        
+        const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({
+            to: passenger.email,
+            subject: '🚗 تم قبول حجزك!',
+            html: `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
+    <h1 style="color: #3b82f6;">🚗 تم قبول حجزك!</h1>
+    <p>مرحباً ${passengerName},</p>
+    <p>تم قبول حجزك رقم <strong>${booking.id}</strong> بنجاح من قبل ${driverName}.</p>
+    <p>يمكنك الآن التواصل مع السائق لترتيب تفاصيل الرحلة.</p>
+    <p style="margin-top: 30px; color: #666; font-size: 12px;">هذا إشعار تلقائي من منصة أبريد</p>
+  </div>
+</body>
+</html>
+            `,
+            text: `تم قبول حجزك رقم ${booking.id} بنجاح من قبل ${driverName}. يمكنك الآن التواصل مع السائق لترتيب تفاصيل الرحلة.`
+          }),
+        });
+        
+        addLog(`📊 Email response status: ${emailResponse.status} ${emailResponse.statusText}`);
+        
+        if (!emailResponse.ok) {
+          const errorText = await emailResponse.text();
+          addLog(`❌ Email error: ${errorText}`);
+          throw new Error(`Email failed: ${emailResponse.status} - ${errorText}`);
+        }
+        
+        const emailResult = await emailResponse.json();
+        addLog(`✅ البريد أُرسل بنجاح!`);
+        addLog(`   Provider: ${emailResult.provider || 'unknown'}`);
+        addLog(`   Message: ${emailResult.message || 'N/A'}`);
+        addLog(`   Full result: ${JSON.stringify(emailResult, null, 2)}`);
+        
+        resultDiv.className = 'result success';
+        resultDiv.innerHTML = `
+          <strong>✅ نجح الاختبار!</strong><br>
+          <p><strong>البريد الإلكتروني:</strong> ${passenger.email}</p>
+          <p><strong>الراكب:</strong> ${passengerName}</p>
+          <p><strong>الحجز:</strong> #${booking.id} (${booking.status})</p>
+          <p><strong>المزود:</strong> ${emailResult.provider || 'unknown'}</p>
+          ${emailResult.messageId ? `<p><strong>Message ID:</strong> ${emailResult.messageId}</p>` : ''}
+          <pre style="background: #f3f4f6; padding: 10px; border-radius: 4px; overflow-x: auto; margin-top: 10px; font-size: 12px;">${JSON.stringify(emailResult, null, 2)}</pre>
+        `;
+        resultDiv.style.display = 'block';
+        
+      } catch (error) {
+        addLog(`❌ خطأ: ${error.message}`);
+        console.error('Error:', error);
+        
+        resultDiv.className = 'result error';
+        resultDiv.innerHTML = `
+          <strong>❌ فشل الاختبار</strong><br>
+          <p>${error.message}</p>
+        `;
+        resultDiv.style.display = 'block';
+      }
+    };
+  </script>
+</body>
+</html>
+

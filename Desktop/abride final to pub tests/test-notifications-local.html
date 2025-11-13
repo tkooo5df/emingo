@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار الإشعارات المحلي</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            direction: rtl;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button.secondary {
+            background: #2196F3;
+        }
+        button.secondary:hover {
+            background: #0b7dda;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        .section h2 {
+            color: #666;
+            margin-top: 0;
+        }
+        #output {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .user-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 اختبار نظام الإشعارات المحلي</h1>
+        
+        <div class="user-info">
+            <h3>معلومات المستخدم</h3>
+            <div id="userInfo">جاري التحميل...</div>
+        </div>
+
+        <div class="section">
+            <h2>إشعارات الحجز 📋</h2>
+            <button onclick="createBookingNotification()">إنشاء إشعار حجز جديد</button>
+            <button onclick="createBookingConfirmedNotification()">إنشاء إشعار تأكيد حجز</button>
+            <button onclick="createBookingCancelledNotification()">إنشاء إشعار إلغاء حجز</button>
+        </div>
+
+        <div class="section">
+            <h2>إشعارات الرحلات 🚗</h2>
+            <button onclick="createTripNotification()">إنشاء إشعار رحلة جديدة</button>
+            <button onclick="createTripUpdatedNotification()">إنشاء إشعار تحديث رحلة</button>
+        </div>
+
+        <div class="section">
+            <h2>إشعارات الدفع 💰</h2>
+            <button onclick="createPaymentNotification()">إنشاء إشعار دفع</button>
+        </div>
+
+        <div class="section">
+            <h2>إدارة الإشعارات</h2>
+            <button class="secondary" onclick="loadNotifications()">تحميل جميع الإشعارات</button>
+            <button class="secondary" onclick="clearAllNotifications()">مسح جميع الإشعارات</button>
+        </div>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString('ar-DZ');
+            const color = type === 'error' ? '#ff5555' : type === 'success' ? '#50fa7b' : '#0f0';
+            output.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function getCurrentUser() {
+            const userStr = localStorage.getItem('demo_user');
+            if (!userStr) {
+                log('❌ لم يتم العثور على مستخدم. الرجاء تسجيل الدخول أولاً!', 'error');
+                return null;
+            }
+            return JSON.parse(userStr);
+        }
+
+        function loadUserInfo() {
+            const user = getCurrentUser();
+            const userInfoDiv = document.getElementById('userInfo');
+            
+            if (user) {
+                userInfoDiv.innerHTML = `
+                    <p><strong>المعرف:</strong> ${user.id}</p>
+                    <p><strong>الاسم:</strong> ${user.fullName || user.email}</p>
+                    <p><strong>الدور:</strong> ${user.role}</p>
+                `;
+                log('✅ تم تحميل معلومات المستخدم', 'success');
+            } else {
+                userInfoDiv.innerHTML = '<p style="color: red;">لم يتم تسجيل الدخول</p>';
+            }
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function createNotification(notification) {
+            const user = getCurrentUser();
+            if (!user) return;
+
+            try {
+                const dataStr = localStorage.getItem('demo_database');
+                const data = dataStr ? JSON.parse(dataStr) : { notifications: [] };
+
+                if (!data.notifications) {
+                    data.notifications = [];
+                }
+
+                const newNotification = {
+                    id: generateId(),
+                    userId: user.id,
+                    ...notification,
+                    isRead: false,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                data.notifications.push(newNotification);
+                localStorage.setItem('demo_database', JSON.stringify(data));
+
+                log(`✅ تم إنشاء إشعار: ${newNotification.title}`, 'success');
+                log(`📝 المحتوى: ${newNotification.message}`, 'info');
+            } catch (error) {
+                log(`❌ خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        function createBookingNotification() {
+            createNotification({
+                title: '🚗 حجز جديد',
+                message: 'لديك حجز جديد من أحمد بن محمد من غرداية إلى الجزائر (3 مقاعد - 600 دج)',
+                type: 'booking_created',
+                category: 'booking',
+                priority: 'high',
+                relatedType: 'booking',
+                relatedId: generateId()
+            });
+        }
+
+        function createBookingConfirmedNotification() {
+            createNotification({
+                title: '✅ تم تأكيد الحجز',
+                message: 'تم تأكيد حجزك من السائق محمد علي. استعد للرحلة!',
+                type: 'booking_confirmed',
+                category: 'booking',
+                priority: 'high',
+                relatedType: 'booking',
+                relatedId: generateId()
+            });
+        }
+
+        function createBookingCancelledNotification() {
+            createNotification({
+                title: '❌ تم إلغاء الحجز',
+                message: 'تم إلغاء حجزك من السائق. يمكنك البحث عن رحلة أخرى.',
+                type: 'booking_cancelled',
+                category: 'booking',
+                priority: 'high',
+                relatedType: 'booking',
+                relatedId: generateId()
+            });
+        }
+
+        function createTripNotification() {
+            createNotification({
+                title: '🆕 رحلة جديدة متاحة',
+                message: 'رحلة جديدة من غرداية إلى الجزائر متاحة الآن. سارع بالحجز!',
+                type: 'trip_created',
+                category: 'trip',
+                priority: 'medium',
+                relatedType: 'trip',
+                relatedId: generateId()
+            });
+        }
+
+        function createTripUpdatedNotification() {
+            createNotification({
+                title: '📝 تحديث الرحلة',
+                message: 'تم تحديث موعد رحلتك. الموعد الجديد: غداً الساعة 8 صباحاً',
+                type: 'trip_updated',
+                category: 'trip',
+                priority: 'high',
+                relatedType: 'trip',
+                relatedId: generateId()
+            });
+        }
+
+        function createPaymentNotification() {
+            createNotification({
+                title: '💰 تم استلام الدفع',
+                message: 'تم استلام 600 دج من أحمد بن محمد (نقداً)',
+                type: 'payment_received',
+                category: 'payment',
+                priority: 'medium',
+                relatedType: 'booking',
+                relatedId: generateId()
+            });
+        }
+
+        function loadNotifications() {
+            const user = getCurrentUser();
+            if (!user) return;
+
+            try {
+                const dataStr = localStorage.getItem('demo_database');
+                const data = dataStr ? JSON.parse(dataStr) : { notifications: [] };
+                const userNotifications = (data.notifications || []).filter(n => n.userId === user.id);
+
+                log(`📊 إجمالي الإشعارات: ${userNotifications.length}`, 'info');
+                log(`📬 غير المقروءة: ${userNotifications.filter(n => !n.isRead).length}`, 'info');
+                
+                userNotifications.forEach((n, i) => {
+                    log(`${i + 1}. ${n.isRead ? '✓' : '●'} ${n.title}`, 'info');
+                });
+            } catch (error) {
+                log(`❌ خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        function clearAllNotifications() {
+            if (!confirm('هل أنت متأكد من حذف جميع الإشعارات؟')) return;
+
+            try {
+                const dataStr = localStorage.getItem('demo_database');
+                const data = dataStr ? JSON.parse(dataStr) : {};
+                data.notifications = [];
+                localStorage.setItem('demo_database', JSON.stringify(data));
+                log('✅ تم مسح جميع الإشعارات', 'success');
+            } catch (error) {
+                log(`❌ خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        // Load user info on page load
+        window.onload = function() {
+            loadUserInfo();
+            log('🚀 تم تحميل صفحة اختبار الإشعارات', 'success');
+            log('💡 تأكد من تسجيل الدخول في التطبيق أولاً', 'info');
+        };
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار صلاحيات المدير</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>اختبار صلاحيات المدير</h1>
+    
+    <div class="test-section">
+        <h2>1. تسجيل الدخول كمدير</h2>
+        <p>استخدم أحد هذه الحسابات:</p>
+        <ul>
+            <li>aminekerkarr@gmail.com (مدير)</li>
+            <li>pa.jti.l.ivi.u@gmail.com (مدير)</li>
+        </ul>
+        <a href="http://localhost:5173/auth/signin" target="_blank">تسجيل الدخول</a>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. الوصول إلى لوحة المدير</h2>
+        <p>بعد تسجيل الدخول، انتقل إلى:</p>
+        <a href="http://localhost:5173/admin" target="_blank">لوحة تحكم المدير</a>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. البحث عن قسم إدارة الركاب</h2>
+        <p>يجب أن ترى قسم "إدارة الركاب" مع:</p>
+        <ul>
+            <li>جدول الركاب</li>
+            <li>أزرار إيقاف/تفعيل</li>
+            <li>حالة الحساب (نشط/موقوف)</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. اختبار إيقاف حساب راكب</h2>
+        <p>جرب إيقاف حساب راكب نشط:</p>
+        <ul>
+            <li>RAKEB sades (parot52116@nrlord.com)</li>
+            <li>RAKEB zawej (pevow11710@memeazon.com)</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. اختبار تفعيل حساب راكب</h2>
+        <p>جرب تفعيل حساب راكب موقوف:</p>
+        <ul>
+            <li>RAKEB sabe3 (95d39a6ae4@webxios.pro) - موقوف حالياً</li>
+        </ul>
+    </div>
+    
+    <script>
+        console.log('صفحة اختبار صلاحيات المدير محملة');
+        console.log('تأكد من تسجيل الدخول بحساب مدير أولاً');
+    </script>
+</body>
+</html>

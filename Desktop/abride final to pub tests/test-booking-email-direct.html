@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>اختبار إرسال بريد تأكيد الحجز مباشرة</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .result {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 8px;
+      display: none;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .result.success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 2px solid #10b981;
+      display: block;
+    }
+    
+    .result.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 2px solid #ef4444;
+      display: block;
+    }
+    
+    .result.loading {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 2px solid #3b82f6;
+      display: block;
+    }
+    
+    .result.info {
+      background: #fef3c7;
+      color: #92400e;
+      border: 2px solid #f59e0b;
+      display: block;
+    }
+    
+    .log-container {
+      margin-top: 20px;
+      padding: 15px;
+      background: #1f2937;
+      color: #10b981;
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-left: 3px solid #10b981;
+      padding-left: 10px;
+    }
+    
+    .log-entry.error {
+      color: #ef4444;
+      border-left-color: #ef4444;
+    }
+    
+    .log-entry.warning {
+      color: #f59e0b;
+      border-left-color: #f59e0b;
+    }
+    
+    .log-entry.info {
+      color: #3b82f6;
+      border-left-color: #3b82f6;
+    }
+    
+    .quick-test-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .quick-test-button {
+      background: #10b981;
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+    
+    .clear-log {
+      background: #ef4444;
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📧 اختبار إرسال بريد تأكيد الحجز مباشرة</h1>
+    <p class="subtitle">اختبار مباشر بدون الحاجة لإنشاء رحلة أو حجز - يرسل البريد مباشرة عبر Edge Function</p>
+    
+    <!-- Quick Test Section -->
+    <div class="section">
+      <div class="section-title">⚡ اختبار سريع</div>
+      <div class="quick-test-buttons">
+        <button class="quick-test-button" onclick="quickTest('passenger')">اختبار بريد راكب</button>
+        <button class="quick-test-button" onclick="quickTest('driver')">اختبار بريد سائق</button>
+        <button class="quick-test-button" onclick="quickTest('admin')">اختبار بريد إداري</button>
+        <button class="clear-log" onclick="clearLog()">مسح السجل</button>
+      </div>
+    </div>
+    
+    <!-- Manual Test Section -->
+    <div class="section">
+      <div class="section-title">🔧 اختبار يدوي</div>
+      
+      <div class="form-group">
+        <label for="email">البريد الإلكتروني:</label>
+        <input type="email" id="email" placeholder="example@email.com" value="0dc28c41d9@webxio.pro">
+      </div>
+      
+      <div class="form-group">
+        <label for="subject">الموضوع:</label>
+        <input type="text" id="subject" value="🚗 تم قبول حجزك!">
+      </div>
+      
+      <div class="form-group">
+        <label for="message">الرسالة:</label>
+        <textarea id="message">السائق أحمد السائق قبل حجزك. يمكنك التواصل معه على +213 555 123 456 لترتيب تفاصيل الرحلة.</textarea>
+      </div>
+      
+      <button id="sendBtn" onclick="sendTestEmail()">إرسال بريد تجريبي</button>
+      <button onclick="testNotificationService()">اختبار عبر NotificationService</button>
+    </div>
+    
+    <!-- Result Section -->
+    <div id="result" class="result"></div>
+    
+    <!-- Log Section -->
+    <div class="section">
+      <div class="section-title">📋 سجل العمليات</div>
+      <div id="logContainer" class="log-container">
+        <div class="log-entry info">جاهز للاختبار...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const supabaseUrl = 'https://kobsavfggcnfemdzsnpj.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtvYnNhdmZnZ2NuZmVtZHpzbnBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3OTk3ODEsImV4cCI6MjA3NDM3NTc4MX0._TfXDauroKe8EAv_Fv4PQAZfOqk-rHbXAlF8bOU3-Qk';
+
+    function addLog(message, type = 'info') {
+      const logContainer = document.getElementById('logContainer');
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry ${type}`;
+      const timestamp = new Date().toLocaleTimeString('ar-SA');
+      logEntry.textContent = `[${timestamp}] ${message}`;
+      logContainer.appendChild(logEntry);
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('logContainer').innerHTML = '<div class="log-entry info">تم مسح السجل...</div>';
+    }
+
+    function showResult(message, type = 'info') {
+      const resultDiv = document.getElementById('result');
+      resultDiv.className = `result ${type}`;
+      resultDiv.innerHTML = message;
+      resultDiv.style.display = 'block';
+    }
+
+    function quickTest(type) {
+      addLog(`بدء اختبار سريع: ${type}`, 'info');
+      
+      let email, subject, message;
+      
+      switch(type) {
+        case 'passenger':
+          email = '0dc28c41d9@webxio.pro';
+          subject = '🚗 تم قبول حجزك!';
+          message = 'السائق أحمد السائق قبل حجزك. يمكنك التواصل معه على +213 555 123 456 لترتيب تفاصيل الرحلة.';
+          break;
+        case 'driver':
+          email = '0dc28c41d9@webxio.pro';
+          subject = '✅ تم تأكيد الحجز';
+          message = 'تم تأكيد حجز #123. تأكد من التواصل مع الراكب لتنسيق تفاصيل الرحلة.';
+          break;
+        case 'admin':
+          email = '0dc28c41d9@webxio.pro';
+          subject = '🔧 تأكيد حجز - متابعة تقنية';
+          message = 'تحديث مطور: السائق أحمد أكد الحجز #123 للراكب محمد.';
+          break;
+      }
+      
+      document.getElementById('email').value = email;
+      document.getElementById('subject').value = subject;
+      document.getElementById('message').value = message;
+      
+      sendTestEmail();
+    }
+
+    async function sendTestEmail() {
+      const email = document.getElementById('email').value;
+      const subject = document.getElementById('subject').value;
+      const message = document.getElementById('message').value;
+      const sendBtn = document.getElementById('sendBtn');
+
+      if (!email) {
+        showResult('❌ يرجى إدخال البريد الإلكتروني', 'error');
+        addLog('فشل: لم يتم إدخال البريد الإلكتروني', 'error');
+        return;
+      }
+
+      sendBtn.disabled = true;
+      showResult('⏳ جاري إرسال البريد...', 'loading');
+      addLog(`بدء إرسال البريد إلى: ${email}`, 'info');
+      addLog(`الموضوع: ${subject}`, 'info');
+
+      try {
+        addLog('📧 استدعاء Edge Function: send-email', 'info');
+        addLog(`URL: ${supabaseUrl}/functions/v1/send-email`, 'info');
+        
+        const response = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({
+            to: email,
+            subject: subject,
+            html: createEmailTemplate(subject, message),
+            text: message,
+          }),
+        });
+
+        addLog(`📊 حالة الاستجابة: ${response.status} ${response.statusText}`, 'info');
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          addLog(`❌ خطأ في الاستجابة: ${errorText}`, 'error');
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const result = await response.json();
+        addLog(`✅ النتيجة: ${JSON.stringify(result, null, 2)}`, 'info');
+
+        const provider = result.provider || 'unknown';
+        const providerName = provider === 'resend' ? '✅ Resend API' : 
+                           provider === 'mailrelay' ? '⚠️ Mailrelay API' : 
+                           provider === 'supabase-auth' ? '🔄 Supabase Auth' : '❓ Unknown';
+        
+        showResult(`
+          <strong>✅ تم إرسال البريد بنجاح!</strong><br>
+          <p>تم إرسال البريد إلى: <strong>${email}</strong></p>
+          <p><strong>مزود البريد:</strong> ${providerName}</p>
+          ${result.messageId ? `<p>Message ID: ${result.messageId}</p>` : ''}
+          ${result.message ? `<p style="color: #059669;">${result.message}</p>` : ''}
+          ${result.warning ? `<p style="color: #d97706;">⚠️ ${result.warning}</p>` : ''}
+          <pre style="background: #f3f4f6; padding: 10px; border-radius: 4px; overflow-x: auto; margin-top: 10px; font-size: 12px;">${JSON.stringify(result, null, 2)}</pre>
+        `, 'success');
+        
+        addLog('✅ تم إرسال البريد بنجاح!', 'info');
+      } catch (error) {
+        addLog(`❌ خطأ: ${error.message}`, 'error');
+        console.error('❌ Error sending email:', error);
+        
+        showResult(`
+          <strong>❌ فشل إرسال البريد</strong><br>
+          <p>${error.message || 'حدث خطأ غير متوقع'}</p>
+          <pre style="background: #f3f4f6; padding: 10px; border-radius: 4px; overflow-x: auto; margin-top: 10px; font-size: 12px;">${error.toString()}</pre>
+          <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-radius: 6px;">
+            <strong>🔍 خطوات التشخيص:</strong>
+            <ol style="margin-top: 10px; padding-right: 20px;">
+              <li>تحقق من Console (F12) للأخطاء</li>
+              <li>تحقق من Edge Function Logs في Supabase Dashboard</li>
+              <li>تأكد من أن RESEND_API_KEY موجود في Supabase Secrets</li>
+              <li>تحقق من أن Edge Function منشور: <code>supabase functions deploy send-email</code></li>
+            </ol>
+          </div>
+        `, 'error');
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    async function testNotificationService() {
+      addLog('🔧 بدء اختبار NotificationService...', 'info');
+      showResult('⏳ جاري اختبار NotificationService...', 'loading');
+      
+      try {
+        // محاولة استدعاء NotificationService مباشرة
+        addLog('⚠️ هذه الدالة تحتاج إلى استيراد NotificationService من الكود', 'warning');
+        addLog('💡 استخدم sendTestEmail() للاختبار المباشر عبر Edge Function', 'info');
+        
+        showResult(`
+          <strong>ℹ️ ملاحظة</strong><br>
+          <p>لاختبار NotificationService مباشرة، تحتاج إلى:</p>
+          <ol style="margin-top: 10px; padding-right: 20px;">
+            <li>استيراد NotificationService في الكود</li>
+            <li>استدعاء notifyBookingConfirmed مع bookingId وdriverId</li>
+          </ol>
+          <p style="margin-top: 15px;">💡 استخدم <strong>sendTestEmail()</strong> للاختبار المباشر عبر Edge Function</p>
+        `, 'info');
+      } catch (error) {
+        addLog(`❌ خطأ: ${error.message}`, 'error');
+        showResult(`❌ خطأ: ${error.message}`, 'error');
+      }
+    }
+
+    function createEmailTemplate(title, message) {
+      return `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+</head>
+<body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+  <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <div style="border-left: 4px solid #3b82f6; padding-left: 20px; margin-bottom: 20px;">
+      <h1 style="color: #3b82f6; margin: 0; font-size: 24px;">${title}</h1>
+    </div>
+    
+    <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+      <p style="margin: 0; font-size: 16px; color: #4b5563;">${message}</p>
+    </div>
+
+    <a href="https://abride.online/user-dashboard?tab=bookings" style="display: inline-block; padding: 12px 24px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 6px; margin-top: 20px;">عرض التفاصيل</a>
+
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; text-align: center;">
+      <p style="margin: 0;">هذا إشعار تلقائي من منصة أبريد</p>
+      <p style="margin: 5px 0 0 0;">© ${new Date().getFullYear()} abride</p>
+    </div>
+  </div>
+</body>
+</html>
+      `.trim();
+    }
+
+    // إضافة سجل عند التحميل
+    addLog('✅ الصفحة جاهزة للاختبار', 'info');
+    addLog(`📧 Edge Function URL: ${supabaseUrl}/functions/v1/send-email`, 'info');
+  </script>
+</body>
+</html>
+
