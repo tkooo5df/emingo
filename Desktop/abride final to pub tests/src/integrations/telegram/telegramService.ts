@@ -175,5 +175,34 @@ ${data.driverName ? `🚗 السائق: ${data.driverName}` : ''}
       return false;
     }
   }
+
+  // Send formatted notification about contact form submission
+  static async notifyContactForm(data: {
+    name: string;
+    email: string;
+    phone: string;
+    subject: string;
+    message: string;
+  }): Promise<boolean> {
+    try {
+      const message = `
+📧 <b>رسالة جديدة من نموذج الاتصال</b>
+
+👤 الاسم: ${data.name}
+📧 البريد الإلكتروني: ${data.email}
+📱 رقم الهاتف: ${data.phone}
+📌 الموضوع: ${data.subject}
+
+💬 الرسالة:
+${data.message}
+
+⏰ الوقت: ${new Date().toLocaleString('ar-DZ', { timeZone: 'Africa/Algiers' })}
+      `.trim();
+
+      return await this.sendMessage(message);
+    } catch (error) {
+      return false;
+    }
+  }
 }
 

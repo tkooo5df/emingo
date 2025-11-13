@@ -19,14 +19,13 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
   // Check for error messages from URL params (from AuthCallback redirect)
   useEffect(() => {
-    // Use both location.search and window.location.search for maximum compatibility
     const searchString = location.search || window.location.search;
     const urlParams = new URLSearchParams(searchString);
     const errorParam = urlParams.get('error');
@@ -35,11 +34,8 @@ const SignIn = () => {
     if (errorParam && messageParam) {
       try {
         const decodedMessage = decodeURIComponent(messageParam);
-        
-        // Set error state immediately - this will trigger re-render
         setError(decodedMessage);
-        
-        // Show toast notification after a brief delay
+
         const toastId = setTimeout(() => {
           toast({
             title: "⚠️ لا يمكن تسجيل الدخول",
@@ -48,19 +44,18 @@ const SignIn = () => {
             duration: 6000,
           });
         }, 300);
-        
-        // Clean URL after state is set and toast is shown
+
         const cleanupId = setTimeout(() => {
           if (window.location.search) {
             window.history.replaceState({}, '', window.location.pathname);
           }
         }, 800);
-        
+
         return () => {
           clearTimeout(toastId);
           clearTimeout(cleanupId);
         };
-      } catch (e) {
+      } catch {
         setError('حدث خطأ أثناء معالجة رسالة الخطأ');
       }
     }
@@ -72,13 +67,12 @@ const SignIn = () => {
     setError(null);
 
     if (!email.trim()) {
-      setError("البريد الإلكتروني مطلوب");
+      setError('البريد الإلكتروني مطلوب');
       setIsLoading(false);
       return;
     }
-
     if (!password.trim()) {
-      setError("كلمة المرور مطلوبة");
+      setError('كلمة المرور مطلوبة');
       setIsLoading(false);
       return;
     }
@@ -86,22 +80,20 @@ const SignIn = () => {
     try {
       await signIn(email, password);
 
-      // Redirect all users directly to home page
       navigate('/');
 
       toast({
-        title: "تم تسجيل الدخول بنجاح",
-        description: "مرحباً بك مرة أخرى!",
+        title: 'تم تسجيل الدخول بنجاح',
+        description: 'مرحباً بك مرة أخرى!',
       });
-    } catch (error: any) {
-      // Handle errors more gracefully without exposing technical details
-      let errorMessage = "حدث خطأ أثناء تسجيل الدخول. يرجى التحقق من بياناتك والمحاولة مرة أخرى";
-      
-      // Use the user-friendly error message if available
-      if (error?.message) {
-        errorMessage = error.message;
+    } catch (err) {
+      let errorMessage = 'حدث خطأ أثناء تسجيل الدخول. يرجى التحقق من بياناتك والمحاولة مرة أخرى';
+      if (err && typeof err === 'object' && 'message' in err) {
+        const errorWithMessage = err as { message?: string };
+        if (typeof errorWithMessage.message === 'string') {
+          errorMessage = errorWithMessage.message;
+        }
       }
-      
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -127,8 +119,9 @@ const SignIn = () => {
         throw error;
       }
       // Note: The redirect will happen automatically, so we don't need to navigate manually
-    } catch (error: any) {
-      setError("حدث خطأ أثناء تسجيل الدخول بـ Google");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "حدث خطأ أثناء تسجيل الدخول بـ Google";
+      setError(errorMessage);
     } finally {
       setIsGoogleLoading(false);
     }
@@ -137,7 +130,6 @@ const SignIn = () => {
   return (
     <div className="min-h-screen bg-background" dir="rtl">
       <Header />
-      
       <main className="container mx-auto px-4 py-8">
         <div className="w-full max-w-lg md:max-w-xl mx-auto flex flex-col items-center justify-center">
           <Card className="w-full">
@@ -150,7 +142,6 @@ const SignIn = () => {
                 أدخل بياناتك للوصول إلى حسابك
               </CardDescription>
             </CardHeader>
-            
             <CardContent className="space-y-6">
               {error && (
                 <Alert variant="destructive" className="border-2 border-red-500 bg-red-50 dark:bg-red-950">
@@ -175,7 +166,6 @@ const SignIn = () => {
                   </AlertDescription>
                 </Alert>
               )}
-              
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">البريد الإلكتروني</Label>
@@ -192,13 +182,12 @@ const SignIn = () => {
                     />
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="password">كلمة المرور</Label>
                   <div className="relative">
                     <Input
                       id="password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="أدخل كلمة المرور"
                       required
                       value={password}
@@ -266,7 +255,6 @@ const SignIn = () => {
           </Card>
         </div>
       </main>
-      
       <Footer />
     </div>
   );

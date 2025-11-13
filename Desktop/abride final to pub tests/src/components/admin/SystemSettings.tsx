@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,8 @@ import {
   DollarSign
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { BrowserDatabaseService } from "@/integrations/database/browserServices";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SystemConfig {
   siteName: string;
@@ -38,6 +40,7 @@ interface SystemConfig {
   maintenanceMode: boolean;
   registrationEnabled: boolean;
   driverApprovalRequired: boolean;
+  autoApproveDrivers: boolean;
   minBookingPrice: number;
   maxBookingPrice: number;
   cancellationFee: number;
@@ -49,10 +52,11 @@ interface SystemConfig {
 }
 
 const SystemSettings = () => {
+  const { user } = useAuth();
   const [config, setConfig] = useState<SystemConfig>({
     siteName: "منصة أبريد",
     siteDescription: "أفضل خدمة نقل في الجزائر",
-    supportPhone: "+213 555 123 456",
+    supportPhone: "213559509817",
     supportEmail: "support@abride.online",
     defaultLanguage: "ar",
     enableNotifications: true,
@@ -61,6 +65,7 @@ const SystemSettings = () => {
     maintenanceMode: false,
     registrationEnabled: true,
     driverApprovalRequired: true,
+    autoApproveDrivers: false,
     minBookingPrice: 500,
     maxBookingPrice: 10000,
     cancellationFee: 200,
@@ -72,7 +77,67 @@ const SystemSettings = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // Load settings from database on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setLoadingSettings(true);
+        const settings = await BrowserDatabaseService.getSystemSettings();
+        
+        // Map settings to config
+        const settingsMap: Record<string, any> = {};
+        settings.forEach((setting: any) => {
+          const key = setting.key;
+          let value = setting.value;
+          
+          // Parse JSON values
+          if (typeof value === 'string') {
+            try {
+              value = JSON.parse(value);
+            } catch {
+              // Keep as string if not JSON
+            }
+          }
+          
+          settingsMap[key] = value;
+        });
+
+        // Update config with loaded settings
+        setConfig(prev => ({
+          ...prev,
+          siteName: settingsMap.site_name || prev.siteName,
+          siteDescription: settingsMap.site_description || prev.siteDescription,
+          supportPhone: settingsMap.support_phone || prev.supportPhone,
+          supportEmail: settingsMap.support_email || prev.supportEmail,
+          defaultLanguage: settingsMap.default_language || prev.defaultLanguage,
+          enableNotifications: settingsMap.enable_notifications !== undefined ? settingsMap.enable_notifications : prev.enableNotifications,
+          enableSMS: settingsMap.enable_sms !== undefined ? settingsMap.enable_sms : prev.enableSMS,
+          enableEmail: settingsMap.enable_email !== undefined ? settingsMap.enable_email : prev.enableEmail,
+          maintenanceMode: settingsMap.maintenance_mode !== undefined ? settingsMap.maintenance_mode : prev.maintenanceMode,
+          registrationEnabled: settingsMap.registration_enabled !== undefined ? settingsMap.registration_enabled : prev.registrationEnabled,
+          driverApprovalRequired: settingsMap.driver_approval_required !== undefined ? settingsMap.driver_approval_required : prev.driverApprovalRequired,
+          autoApproveDrivers: settingsMap.auto_approve_drivers !== undefined ? settingsMap.auto_approve_drivers : prev.autoApproveDrivers,
+          minBookingPrice: settingsMap.min_booking_price || prev.minBookingPrice,
+          maxBookingPrice: settingsMap.max_booking_price || prev.maxBookingPrice,
+          cancellationFee: settingsMap.cancellation_fee || prev.cancellationFee,
+        }));
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        toast({
+          title: "خطأ في تحميل الإعدادات",
+          description: "تم استخدام الإعدادات الافتراضية",
+          variant: "destructive"
+        });
+      } finally {
+        setLoadingSettings(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   const handleConfigChange = (key: string, value: any) => {
     setConfig(prev => ({
@@ -94,8 +159,33 @@ const SystemSettings = () => {
   const handleSaveSettings = async () => {
     setLoading(true);
     try {
-      // Here you would typically save to your backend
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      // Save all settings to database
+      const settingsToSave = [
+        { key: 'site_name', value: JSON.stringify(config.siteName), description: 'اسم الموقع' },
+        { key: 'site_description', value: JSON.stringify(config.siteDescription), description: 'وصف الموقع' },
+        { key: 'support_phone', value: JSON.stringify(config.supportPhone), description: 'رقم الدعم الرئيسي' },
+        { key: 'support_email', value: JSON.stringify(config.supportEmail), description: 'بريد الدعم الرسمي' },
+        { key: 'default_language', value: JSON.stringify(config.defaultLanguage), description: 'اللغة الافتراضية' },
+        { key: 'enable_notifications', value: JSON.stringify(config.enableNotifications), description: 'تفعيل الإشعارات' },
+        { key: 'enable_sms', value: JSON.stringify(config.enableSMS), description: 'إشعارات SMS' },
+        { key: 'enable_email', value: JSON.stringify(config.enableEmail), description: 'إشعارات البريد' },
+        { key: 'maintenance_mode', value: JSON.stringify(config.maintenanceMode), description: 'وضع الصيانة' },
+        { key: 'registration_enabled', value: JSON.stringify(config.registrationEnabled), description: 'تفعيل التسجيل' },
+        { key: 'driver_approval_required', value: JSON.stringify(config.driverApprovalRequired), description: 'مراجعة طلبات السائقين' },
+        { key: 'auto_approve_drivers', value: JSON.stringify(config.autoApproveDrivers), description: 'قبول السائقين الجدد تلقائياً (true) أو مراجعتهم بواسطة الأدمن (false)' },
+        { key: 'min_booking_price', value: JSON.stringify(config.minBookingPrice), description: 'الحد الأدنى للسعر' },
+        { key: 'max_booking_price', value: JSON.stringify(config.maxBookingPrice), description: 'الحد الأقصى للسعر' },
+        { key: 'cancellation_fee', value: JSON.stringify(config.cancellationFee), description: 'رسوم الإلغاء' },
+      ];
+
+      // Save each setting
+      for (const setting of settingsToSave) {
+        await BrowserDatabaseService.updateSystemSetting(
+          setting.key,
+          setting.value,
+          setting.description
+        );
+      }
       
       setLastSaved(new Date());
       toast({
@@ -103,6 +193,7 @@ const SystemSettings = () => {
         description: "تم حفظ إعدادات النظام بنجاح",
       });
     } catch (error) {
+      console.error('Error saving settings:', error);
       toast({
         title: "خطأ في الحفظ",
         description: "حدث خطأ أثناء حفظ الإعدادات",
@@ -118,7 +209,7 @@ const SystemSettings = () => {
     setConfig({
       siteName: "منصة أبريد",
       siteDescription: "أفضل خدمة نقل في الجزائر",
-      supportPhone: "+213 555 123 456",
+      supportPhone: "213559509817",
       supportEmail: "support@abride.online",
       defaultLanguage: "ar",
       enableNotifications: true,
@@ -127,6 +218,7 @@ const SystemSettings = () => {
       maintenanceMode: false,
       registrationEnabled: true,
       driverApprovalRequired: true,
+      autoApproveDrivers: false,
       minBookingPrice: 500,
       maxBookingPrice: 10000,
       cancellationFee: 200,
@@ -143,6 +235,17 @@ const SystemSettings = () => {
     });
   };
 
+  if (loadingSettings) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">جاري تحميل الإعدادات...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -152,7 +255,7 @@ const SystemSettings = () => {
           <p className="text-muted-foreground">تكوين وإدارة إعدادات الموقع</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleResetSettings}>
+          <Button variant="outline" onClick={handleResetSettings} disabled={loading}>
             <RefreshCw className="h-4 w-4 mr-2" />
             إعادة تعيين
           </Button>
@@ -326,6 +429,28 @@ const SystemSettings = () => {
                 id="driverApprovalRequired"
                 checked={config.driverApprovalRequired}
                 onCheckedChange={(checked) => handleConfigChange("driverApprovalRequired", checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="autoApproveDrivers">قبول السائقين تلقائياً</Label>
+                <p className="text-sm text-muted-foreground">
+                  {config.autoApproveDrivers 
+                    ? "السائقون الجدد سيتم قبولهم تلقائياً" 
+                    : "السائقون الجدد يحتاجون مراجعة من الأدمن"}
+                </p>
+              </div>
+              <Switch
+                id="autoApproveDrivers"
+                checked={config.autoApproveDrivers}
+                onCheckedChange={(checked) => {
+                  handleConfigChange("autoApproveDrivers", checked);
+                  // إذا تم تفعيل القبول التلقائي، يجب تعطيل موافقة السائقين
+                  if (checked) {
+                    handleConfigChange("driverApprovalRequired", false);
+                  }
+                }}
               />
             </div>
           </CardContent>

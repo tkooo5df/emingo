@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { TelegramService } from "@/integrations/telegram/telegramService";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -24,21 +25,45 @@ const Contact = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate sending message
-    setTimeout(() => {
+    try {
+      // Send message to admin via Telegram
+      const telegramSent = await TelegramService.notifyContactForm({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject,
+        message: formData.message
+      });
+
+      if (telegramSent) {
+        toast({
+          title: "تم إرسال رسالتك بنجاح!",
+          description: "سنتواصل معك في أقرب وقت ممكن.",
+        });
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          subject: "",
+          message: ""
+        });
+      } else {
+        toast({
+          title: "حدث خطأ",
+          description: "لم يتم إرسال الرسالة. يرجى المحاولة مرة أخرى.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error sending contact form:", error);
       toast({
-        title: "تم إرسال رسالتك بنجاح!",
-        description: "سنتواصل معك في أقرب وقت ممكن.",
+        title: "حدث خطأ",
+        description: "لم يتم إرسال الرسالة. يرجى المحاولة مرة أخرى.",
+        variant: "destructive",
       });
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: ""
-      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -52,14 +77,14 @@ const Contact = () => {
     {
       icon: Phone,
       title: "الهاتف",
-      value: "+213 782 307 777",
-      link: "tel:+213782307777"
+      value: "213559509817",
+      link: "tel:213559509817"
     },
     {
       icon: Mail,
       title: "البريد الإلكتروني",
-      value: "amineatazpro@gmail.com",
-      link: "mailto:amineatazpro@gmail.com"
+      value: "support@abride.online",
+      link: "mailto:support@abride.online"
     },
     {
       icon: MapPin,

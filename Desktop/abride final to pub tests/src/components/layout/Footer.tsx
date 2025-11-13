@@ -88,15 +88,15 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-primary-foreground/80">
                 <Phone className="h-4 w-4 text-secondary" />
-                <a href="tel:+213782307777" className="hover:text-primary-foreground transition-colors" dir="ltr">+213 782 307 777</a>
+                <a href="tel:213559509817" className="hover:text-primary-foreground transition-colors" dir="ltr">213559509817</a>
               </div>
               <div className="flex items-center gap-3 text-primary-foreground/80">
                 <Mail className="h-4 w-4 text-secondary" />
-                <a href="mailto:amineatazpro@gmail.com" className="hover:text-primary-foreground transition-colors">amineatazpro@gmail.com</a>
+                <a href="mailto:support@abride.online" className="hover:text-primary-foreground transition-colors">support@abride.online</a>
               </div>
               <div className="flex items-start gap-3 text-primary-foreground/80">
                 <MapPin className="h-4 w-4 text-secondary mt-1" />
-                <span>الجزائر العاصمة، الجزائر</span>
+                <span>ولاية غرداية، الجزائر</span>
               </div>
             </div>
           </div>
