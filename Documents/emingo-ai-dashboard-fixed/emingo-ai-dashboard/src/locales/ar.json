@@ -1,0 +1,54 @@
+{
+  "common": {
+    "dashboard": "لوحة التحكم",
+    "income": "الدخل",
+    "expenses": "المصروفات",
+    "budget": "الميزانية",
+    "projects": "المشاريع",
+    "goals": "الأهداف",
+    "aiAssistant": "المساعد الذكي",
+    "debts": "الديون",
+    "settings": "الإعدادات",
+    "more": "المزيد",
+    "navigation": "التنقل",
+    "addIncome": "إضافة دخل",
+    "addExpense": "إضافة مصروف",
+    "addGoal": "إضافة هدف",
+    "addProject": "إضافة مشروع",
+    "addDebt": "إضافة دين",
+    "search": "البحث",
+    "notifications": "الإشعارات",
+    "profile": "الملف الشخصي",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح"
+  },
+  "export": {
+    "export": "تصدير",
+    "csv": "تصدير كـ CSV",
+    "json": "تصدير كـ JSON",
+    "excel": "تصدير كـ Excel",
+    "success": "تم التصدير بنجاح",
+    "csvSuccess": "تم تصدير البيانات كملف CSV بنجاح",
+    "jsonSuccess": "تم تصدير البيانات كملف JSON بنجاح",
+    "error": "فشل التصدير",
+    "errorDescription": "فشل تصدير البيانات. يرجى المحاولة مرة أخرى.",
+    "noData": "لا توجد بيانات",
+    "noDataDescription": "لا توجد بيانات للتصدير"
+  },
+  "offline": {
+    "noConnection": "لا يوجد اتصال بالإنترنت",
+    "backOnline": "عاد الاتصال"
+  },
+  "budget": {
+    "exceeded": "تجاوزت الميزانية!",
+    "warning": "تحذير الميزانية",
+    "categoryAlert": "لقد أنفقت {{percentage}}% من ميزانية {{category}}",
+    "generalAlert": "لقد أنفقت {{percentage}}% من ميزانيتك"
+  }
+}

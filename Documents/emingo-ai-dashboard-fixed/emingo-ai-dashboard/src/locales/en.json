@@ -1,0 +1,54 @@
+{
+  "common": {
+    "dashboard": "Dashboard",
+    "income": "Income",
+    "expenses": "Expenses",
+    "budget": "Budget",
+    "projects": "Projects",
+    "goals": "Goals",
+    "aiAssistant": "AI Assistant",
+    "debts": "Debts",
+    "settings": "Settings",
+    "more": "More",
+    "navigation": "Navigation",
+    "addIncome": "Add Income",
+    "addExpense": "Add Expense",
+    "addGoal": "Add Goal",
+    "addProject": "Add Project",
+    "addDebt": "Add Debt",
+    "search": "Search",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "export": {
+    "export": "Export",
+    "csv": "Export as CSV",
+    "json": "Export as JSON",
+    "excel": "Export as Excel",
+    "success": "Export Successful",
+    "csvSuccess": "Data exported as CSV successfully",
+    "jsonSuccess": "Data exported as JSON successfully",
+    "error": "Export Failed",
+    "errorDescription": "Failed to export data. Please try again.",
+    "noData": "No Data",
+    "noDataDescription": "There is no data to export"
+  },
+  "offline": {
+    "noConnection": "No Internet Connection",
+    "backOnline": "Back Online"
+  },
+  "budget": {
+    "exceeded": "Budget Exceeded!",
+    "warning": "Budget Warning",
+    "categoryAlert": "You've spent {{percentage}}% of your {{category}} budget",
+    "generalAlert": "You've spent {{percentage}}% of your budget"
+  }
+}
